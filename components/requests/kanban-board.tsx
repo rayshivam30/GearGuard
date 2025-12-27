@@ -1,11 +1,33 @@
 "use client"
 
-import type { MaintenanceRequest, Equipment, Team } from "@prisma/client"
 import { useEffect, useState } from "react"
-import { ArrowRight, AlertTriangle, CheckCircle, Clock, AlertCircle } from "lucide-react"
+import { AlertTriangle, CheckCircle, Clock, AlertCircle, Plus } from "lucide-react"
 import { RequestCard } from "./request-card"
 import { RequestForm } from "./request-form"
 import { useAuth } from "@/lib/auth-context"
+
+type Equipment = {
+  id: string
+  name: string
+  serialNumber: string
+}
+
+type Team = {
+  id: string
+  name: string
+}
+
+type MaintenanceRequest = {
+  id: string
+  subject: string
+  description?: string | null
+  status: string
+  priority: string
+  maintenanceType: string
+  scheduledDate?: string | Date | null
+  createdAt: string | Date
+  assignedTechnicianId?: string | null
+}
 
 interface RequestWithRelations extends MaintenanceRequest {
   equipment: Equipment
@@ -20,14 +42,13 @@ interface KanbanBoardProps {
   onRefresh: () => void
 }
 
-const statuses = ["NEW", "IN_PROGRESS", "REPAIRED", "SCRAP", "CANCELLED"]
+const statuses = ["NEW", "IN_PROGRESS", "REPAIRED", "SCRAP"]
 
 const statusConfig = {
-  NEW: { label: "New Requests", icon: AlertCircle, color: "bg-blue-900", textColor: "text-blue-200" },
-  IN_PROGRESS: { label: "In Progress", icon: Clock, color: "bg-yellow-900", textColor: "text-yellow-200" },
-  REPAIRED: { label: "Repaired", icon: CheckCircle, color: "bg-green-900", textColor: "text-green-200" },
-  SCRAP: { label: "Scrap", icon: AlertTriangle, color: "bg-red-900", textColor: "text-red-200" },
-  CANCELLED: { label: "Cancelled", icon: AlertTriangle, color: "bg-gray-900", textColor: "text-gray-200" },
+  NEW: { label: "New", icon: AlertCircle, color: "bg-blue-500/15", textColor: "text-blue-200" },
+  IN_PROGRESS: { label: "In Progress", icon: Clock, color: "bg-yellow-500/15", textColor: "text-yellow-200" },
+  REPAIRED: { label: "Repaired", icon: CheckCircle, color: "bg-green-500/15", textColor: "text-green-200" },
+  SCRAP: { label: "Scrap", icon: AlertTriangle, color: "bg-red-500/15", textColor: "text-red-200" },
 }
 
 export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps) {
@@ -87,16 +108,16 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Maintenance Requests</h2>
+      <div className="flex items-center justify-end">
         {canCreateRequest && (
           <button
             onClick={() => {
               setSelectedRequest(null)
               setShowForm(true)
             }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 ring-1 ring-blue-500/30 transition hover:bg-blue-500"
           >
+            <Plus size={16} />
             New Request
           </button>
         )}
@@ -104,7 +125,7 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
 
       {showForm && (
         <RequestForm
-          request={selectedRequest}
+          request={selectedRequest as any}
           companyId={companyId}
           onClose={() => setShowForm(false)}
           onSuccess={onRefresh}
@@ -118,16 +139,22 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
           const cards = requestsByStatus[status]
 
           return (
-            <div key={status} className="flex flex-col h-full">
-              <div className={`${config.color} rounded-t-lg px-4 py-3 flex items-center gap-2`}>
-                <Icon size={20} className={config.textColor} />
-                <h3 className={`font-semibold ${config.textColor}`}>{config.label}</h3>
-                <span className={`ml-auto font-bold ${config.textColor}`}>{cards.length}</span>
+            <div key={status} className="flex flex-col h-full rounded-2xl bg-slate-800/50 ring-1 ring-slate-700/60 overflow-hidden shadow-xl shadow-black/20">
+              <div className={`px-4 py-3 flex items-center gap-2 border-b border-slate-700/60 ${config.color}`}>
+                <div className="grid h-8 w-8 place-items-center rounded-lg bg-black/10 ring-1 ring-white/10">
+                  <Icon size={16} className={config.textColor} />
+                </div>
+                <h3 className={`text-sm font-semibold ${config.textColor}`}>{config.label}</h3>
+                <span className={`ml-auto rounded-md bg-black/10 px-2 py-0.5 text-xs font-semibold ${config.textColor} ring-1 ring-white/10`}>
+                  {cards.length}
+                </span>
               </div>
 
               <div
-                className={`flex-1 bg-slate-750 rounded-b-lg p-4 space-y-3 min-h-96 overflow-y-auto ${
-                  dragging && isTransitionAllowed(dragging.status, status) ? "ring-2 ring-blue-500" : ""
+                className={`flex-1 p-4 space-y-3 min-h-96 overflow-y-auto transition ${
+                  dragging && isTransitionAllowed(dragging.status, status)
+                    ? "ring-2 ring-blue-500/60 bg-blue-500/5"
+                    : ""
                 }`}
                 onDragOver={(e) => {
                   if (!canUpdateStatus) return

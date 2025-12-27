@@ -1,8 +1,22 @@
 "use client"
 
-import type { MaintenanceRequest, Equipment } from "@prisma/client"
 import { AlertCircle, Zap } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+
+type Equipment = {
+  id: string
+  name: string
+  serialNumber: string
+}
+
+type MaintenanceRequest = {
+  id: string
+  subject: string
+  scheduledDate?: string | Date | null
+  status: string
+  priority: string
+  maintenanceType: string
+}
 
 interface RequestCardProps {
   request: MaintenanceRequest & { equipment: Equipment; user: any; assignedTechnician?: any }
@@ -43,18 +57,20 @@ export function RequestCard({ request, onEdit }: RequestCardProps) {
   return (
     <div
       onClick={onEdit}
-      className={`bg-slate-800 border rounded-lg p-4 cursor-pointer hover:border-slate-600 transition relative ${
-        isOverdue ? "border-red-500 border-l-4" : "border-slate-700"
+      className={`group relative cursor-pointer rounded-xl bg-slate-800/70 p-4 ring-1 shadow-lg shadow-black/20 transition hover:bg-slate-800/85 hover:ring-slate-600/70 ${
+        isOverdue ? "ring-red-500/60" : "ring-slate-700/60"
       }`}
     >
       {isOverdue && (
-        <div className="absolute top-0 left-0 right-0 h-1 bg-red-500 rounded-t-lg" />
+        <div className="absolute inset-x-0 top-0 h-1 rounded-t-xl bg-red-500" />
       )}
       
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h4 className="font-semibold text-white text-sm flex-1 line-clamp-2">{request.subject}</h4>
+        <h4 className="text-sm font-semibold text-white flex-1 line-clamp-2">
+          {request.subject}
+        </h4>
         <span
-          className={`${priorityConfig_.color} ${priorityConfig_.text} text-xs px-2 py-1 rounded whitespace-nowrap`}
+          className={`${priorityConfig_.color} ${priorityConfig_.text} text-xs px-2 py-1 rounded-md whitespace-nowrap ring-1 ring-black/10`}
         >
           {request.priority}
         </span>
@@ -62,20 +78,22 @@ export function RequestCard({ request, onEdit }: RequestCardProps) {
 
       {isOverdue && (
         <div className="mb-2">
-          <span className="text-xs text-red-400 font-medium">⚠️ OVERDUE</span>
+          <span className="text-xs text-red-300 font-semibold">OVERDUE</span>
         </div>
       )}
 
-      <p className="text-slate-400 text-xs mb-3 line-clamp-2">{request.equipment.name}</p>
+      <p className="text-slate-300/80 text-xs mb-3 line-clamp-2">
+        {request.equipment.name}
+      </p>
 
-      <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-        <TypeIcon size={14} />
+      <div className="flex items-center gap-2 text-xs text-slate-300/80 mb-2">
+        <TypeIcon size={14} className="text-slate-300/80" />
         <span>{typeConfig_.label}</span>
       </div>
 
       <div className="flex items-center justify-between mt-3">
         {request.user && (
-          <p className="text-xs text-slate-500">By: {request.user.name}</p>
+          <p className="text-xs text-slate-400">By: {request.user.name}</p>
         )}
         {request.assignedTechnician && (
           <div className="flex items-center gap-2">
@@ -84,7 +102,7 @@ export function RequestCard({ request, onEdit }: RequestCardProps) {
                 {getInitials(request.assignedTechnician.name)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-slate-400">{request.assignedTechnician.name}</span>
+            <span className="text-xs text-slate-300/80">{request.assignedTechnician.name}</span>
           </div>
         )}
       </div>

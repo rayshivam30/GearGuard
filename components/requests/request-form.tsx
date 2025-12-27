@@ -199,17 +199,25 @@ export function RequestForm({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-slate-800 rounded-lg border border-slate-700 shadow-xl max-w-2xl w-full mx-4 p-6 max-h-96 overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-white">{request ? "Edit Request" : "New Maintenance Request"}</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-slate-700 text-slate-400 hover:text-white rounded transition"
-          >
-            <X size={20} />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative flex min-h-full items-center justify-center px-4 py-10">
+        <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-slate-800/80 ring-1 ring-slate-700/70 shadow-2xl shadow-black/40">
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-700/60 bg-slate-900/40 px-6 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-white">{request ? "Edit Request" : "New Maintenance Request"}</h2>
+              <p className="text-xs text-slate-400">Fill details and save to update the workflow</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-slate-300 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="max-h-[75vh] overflow-y-auto px-6 py-5">
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -220,7 +228,7 @@ export function RequestForm({
               value={formData.subject}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              className="w-full rounded-lg bg-black/20 px-3 py-2 text-white placeholder:text-slate-500 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               placeholder="Request subject"
             />
           </div>
@@ -232,7 +240,7 @@ export function RequestForm({
               value={formData.equipmentId}
               onChange={(e) => handleEquipmentChange(e.target.value)}
               required
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              className="w-full rounded-lg bg-black/20 px-3 py-2 text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
               <option value="">Select equipment</option>
               {equipment.map((eq) => (
@@ -255,7 +263,7 @@ export function RequestForm({
                 name="maintenanceType"
                 value={formData.maintenanceType}
                 onChange={handleChange}
-                className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full rounded-lg bg-black/20 px-3 py-2 text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               >
                 <option value="CORRECTIVE">Corrective</option>
                 <option value="PREVENTIVE">Preventive</option>
@@ -269,7 +277,7 @@ export function RequestForm({
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
-                className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full rounded-lg bg-black/20 px-3 py-2 text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               >
                 <option value="LOW">Low</option>
                 <option value="MEDIUM">Medium</option>
@@ -286,7 +294,7 @@ export function RequestForm({
               name="scheduledDate"
               value={formData.scheduledDate}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              className="w-full rounded-lg bg-black/20 px-3 py-2 text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
 
@@ -296,7 +304,7 @@ export function RequestForm({
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              className="w-full rounded-lg bg-black/20 px-3 py-2 text-white placeholder:text-slate-500 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               placeholder="Detailed description"
               rows={2}
             />
@@ -308,7 +316,7 @@ export function RequestForm({
               name="instructions"
               value={formData.instructions}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              className="w-full rounded-lg bg-black/20 px-3 py-2 text-white placeholder:text-slate-500 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               placeholder="Maintenance instructions"
               rows={2}
             />
@@ -320,7 +328,7 @@ export function RequestForm({
               name="assignedTechnicianId"
               value={formData.assignedTechnicianId}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              className="w-full rounded-lg bg-black/20 px-3 py-2 text-white ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
               <option value="">Select technician</option>
               {technicians.map((tech) => (
@@ -341,31 +349,37 @@ export function RequestForm({
                 onChange={handleChange}
                 min="0"
                 step="0.5"
-                className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                className="w-full rounded-lg bg-black/20 px-3 py-2 text-white placeholder:text-slate-500 ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 placeholder="Hours spent on maintenance"
               />
             </div>
           )}
 
-          {error && <div className="p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">{error}</div>}
+          {error && (
+            <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-200 ring-1 ring-red-400/20">
+              {error}
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+              className="flex-1 rounded-lg bg-white/5 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/10 transition hover:bg-white/10"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition font-medium"
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 ring-1 ring-blue-500/30 transition hover:bg-blue-500 disabled:bg-blue-400"
             >
               {loading ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
+          </div>
+        </div>
       </div>
     </div>
   )
