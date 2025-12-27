@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
         name: true,
         role: true,
         department: true,
+        companyId: true,
+        companyName: true,
       },
     })
 

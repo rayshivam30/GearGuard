@@ -34,29 +34,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const companyId = "default-company"
+    if (!user?.companyId) {
+      if (user && !user.companyId) {
+        setLoading(false)
+      }
+      return
+    }
     
     const fetchData = async () => {
       try {
-        // Only show loading on initial fetch
-        if (!stats) {
-          setLoading(true)
-        }
+        setLoading(true)
 
         // Fetch stats
-        const statsRes = await fetch(`/api/dashboard/stats?companyId=${companyId}`)
+        const statsRes = await fetch(`/api/dashboard/stats?companyId=${user.companyId}`)
         if (statsRes.ok) {
           setStats(await statsRes.json())
         }
 
         // Fetch equipment
-        const equipmentRes = await fetch(`/api/equipment?companyId=${companyId}`)
+        const equipmentRes = await fetch(`/api/equipment?companyId=${user.companyId}`)
         if (equipmentRes.ok) {
           setEquipment(await equipmentRes.json())
         }
 
         // Fetch requests
-        const requestsRes = await fetch(`/api/requests?companyId=${companyId}`)
+        const requestsRes = await fetch(`/api/requests?companyId=${user.companyId}`)
         if (requestsRes.ok) {
           setRequests(await requestsRes.json())
         }
@@ -68,17 +70,28 @@ export default function DashboardPage() {
     }
 
     fetchData()
-    // Polling disabled in development to reduce noise
-    // Uncomment for production if you want auto-refresh
-    // const interval = setInterval(fetchData, 30000)
-    // return () => clearInterval(interval)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [user])
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8 flex items-center justify-center">
         <p className="text-slate-400">Loading dashboard...</p>
+      </div>
+    )
+  }
+
+  if (!user?.companyId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-12 text-center">
+            <AlertTriangle className="mx-auto mb-4 text-slate-500" size={40} />
+            <p className="text-slate-400 mb-4">You are not assigned to a company yet. Please contact your administrator.</p>
+          </div>
+        </div>
       </div>
     )
   }
@@ -93,6 +106,9 @@ export default function DashboardPage() {
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-white mb-2">{roleTitle ? `${roleTitle} Dashboard` : "Dashboard"}</h1>
           <p className="text-slate-400">Real-time overview of maintenance operations</p>
+          {user.companyName && (
+            <p className="text-slate-500 text-sm mt-2">Company: {user.companyName}</p>
+          )}
         </div>
 
         {stats && (

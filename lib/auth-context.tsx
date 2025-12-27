@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 
 interface AuthContextType {
-  user: { id: string; email: string; name: string; role: string } | null
+  user: { id: string; email: string; name: string; role: string; companyId?: string; companyName?: string } | null
   isLoading: boolean
   signUp: (email: string, password: string, name: string, company: any, role?: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
