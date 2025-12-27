@@ -2,18 +2,59 @@
 
 import type React from "react"
 
-import type { MaintenanceRequest, Equipment } from "@prisma/client"
 import { useState, useEffect } from "react"
 import { X } from "lucide-react"
+
+type MaintenanceTypeValue = "CORRECTIVE" | "PREVENTIVE" | "PREDICTIVE"
+
+function formatDateForDateInput(value: Date | string | null | undefined) {
+  if (!value) return ""
+  const d = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(d.getTime())) return ""
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd}`
+}
+
+type MaintenanceRequest = {
+  id: string
+  subject: string
+  description: string | null
+  equipmentId: string
+  maintenanceType: MaintenanceTypeValue
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+  assignedTeam: string | null
+  assignedTechnicianId: string | null
+  scheduledDate: Date | string | null
+  duration: number | null
+  notes: string | null
+  instructions: string | null
+}
+
+type Equipment = {
+  id: string
+  name: string
+  serialNumber: string
+}
 
 interface RequestFormProps {
   request: MaintenanceRequest | null
   companyId: string
+  defaultScheduledDate?: Date
+  defaultMaintenanceType?: MaintenanceTypeValue
   onClose: () => void
   onSuccess: () => void
 }
 
-export function RequestForm({ request, companyId, onClose, onSuccess }: RequestFormProps) {
+export function RequestForm({
+  request,
+  companyId,
+  defaultScheduledDate,
+  defaultMaintenanceType,
+  onClose,
+  onSuccess,
+}: RequestFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [equipment, setEquipment] = useState<Equipment[]>([])
@@ -22,24 +63,37 @@ export function RequestForm({ request, companyId, onClose, onSuccess }: RequestF
     subject: request?.subject || "",
     description: request?.description || "",
     equipmentId: request?.equipmentId || "",
-    maintenanceType: request?.maintenanceType || "CORRECTIVE",
+    maintenanceType: request?.maintenanceType || defaultMaintenanceType || "CORRECTIVE",
     priority: request?.priority || "MEDIUM",
     assignedTeam: (request as any)?.assignedTeam || "",
     assignedTechnicianId: (request as any)?.assignedTechnicianId || "",
-    scheduledDate: request?.scheduledDate ? new Date(request.scheduledDate).toISOString().split('T')[0] : "",
+    scheduledDate: request?.scheduledDate
+      ? formatDateForDateInput(request.scheduledDate)
+      : formatDateForDateInput(defaultScheduledDate),
     duration: request?.duration ? Math.round((request.duration || 0) / 60) : "", // Convert minutes to hours
     notes: request?.notes || "",
     instructions: request?.instructions || "",
   })
 
   useEffect(() => {
+    if (request) return
+    if (!defaultScheduledDate && !defaultMaintenanceType) return
+
+    setFormData((prev) => ({
+      ...prev,
+      ...(defaultMaintenanceType ? { maintenanceType: defaultMaintenanceType } : {}),
+      ...(defaultScheduledDate ? { scheduledDate: formatDateForDateInput(defaultScheduledDate) } : {}),
+    }))
+  }, [request, defaultScheduledDate, defaultMaintenanceType])
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const [equipmentRes, techniciansRes] = await Promise.all([
           fetch(`/api/equipment?companyId=${companyId}`),
-          fetch(`/api/users?companyId=${companyId}&role=TECHNICIAN`)
+          fetch(`/api/users?companyId=${companyId}&role=TECHNICIAN`),
         ])
-        
+
         if (equipmentRes.ok) {
           const data = await equipmentRes.json()
           setEquipment(data)
@@ -120,8 +174,19 @@ export function RequestForm({ request, companyId, onClose, onSuccess }: RequestF
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to save request")
+        let message = "Failed to save request"
+        try {
+          const errorData = await response.json()
+          message = errorData?.error || message
+        } catch {
+          try {
+            const text = await response.text()
+            if (text) message = text
+          } catch {
+            // ignore
+          }
+        }
+        throw new Error(message)
       }
 
       onSuccess()
