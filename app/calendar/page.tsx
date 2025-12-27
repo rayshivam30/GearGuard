@@ -3,16 +3,20 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Calendar } from "@/components/ui/calendar"
-import type { MaintenanceRequest, Equipment } from "@prisma/client"
 import { format, isSameDay } from "date-fns"
 import { Plus, Building2 } from "lucide-react"
 import { RequestForm } from "@/components/requests/request-form"
 import { useAuth } from "@/lib/auth-context"
 
-interface RequestWithRelations extends MaintenanceRequest {
-  equipment: Equipment
-  team: any
-  user: any
+type RequestWithRelations = {
+  id: string
+  subject: string
+  priority: string
+  maintenanceType?: string
+  scheduledDate?: string | Date | null
+  equipment: { name: string }
+  team?: { name: string } | null
+  user?: any
 }
 
 export default function CalendarPage() {
@@ -70,9 +74,6 @@ export default function CalendarPage() {
 
   const handleDateClick = (date: Date | undefined) => {
     setSelectedDate(date)
-    if (date) {
-      setShowForm(true)
-    }
   }
 
   if (!user) {
@@ -179,6 +180,8 @@ export default function CalendarPage() {
           <RequestForm
             request={null}
             companyId={user.companyId}
+            defaultScheduledDate={selectedDate}
+            defaultMaintenanceType="PREVENTIVE"
             onClose={() => {
               setShowForm(false)
               fetchRequests()

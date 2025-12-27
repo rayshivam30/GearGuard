@@ -8,6 +8,16 @@ async function getUserIdFromCookie() {
   return cookieStore.get("userId")?.value
 }
 
+function parseLocalDateInput(value: unknown) {
+  if (typeof value !== "string" || !value) return null
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) return new Date(value)
+  const year = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+  return new Date(year, month - 1, day)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromCookie()
@@ -102,6 +112,8 @@ export async function POST(request: NextRequest) {
     // Use assignedTechnician from equipment if available
     const technicianId = equipment.assignedTechnicianId
 
+    const parsedScheduledDate = scheduledDate ? parseLocalDateInput(scheduledDate) : null
+
     const req = await prisma.maintenanceRequest.create({
       data: {
         subject,
@@ -113,7 +125,7 @@ export async function POST(request: NextRequest) {
         priority: priority || "MEDIUM",
         assignedTeam: teamId || null,
         assignedTechnicianId: technicianId || null,
-        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+        scheduledDate: parsedScheduledDate,
         status: "NEW",
       },
       include: {

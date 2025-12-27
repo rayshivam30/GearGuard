@@ -8,6 +8,16 @@ async function getUserIdFromCookie() {
   return cookieStore.get("userId")?.value
 }
 
+function parseLocalDateInput(value: unknown) {
+  if (typeof value !== "string" || !value) return null
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) return new Date(value)
+  const year = Number(m[1])
+  const month = Number(m[2])
+  const day = Number(m[3])
+  return new Date(year, month - 1, day)
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromCookie()
@@ -107,7 +117,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         maintenanceType: body.maintenanceType ?? req.maintenanceType,
         assignedTeam: body.assignedTeam ?? req.assignedTeam,
         assignedTechnicianId: body.assignedTechnicianId ?? req.assignedTechnicianId,
-        scheduledDate: body.scheduledDate ? new Date(body.scheduledDate) : req.scheduledDate,
+        scheduledDate: body.scheduledDate ? parseLocalDateInput(body.scheduledDate) : req.scheduledDate,
         completedDate: body.completedDate ? new Date(body.completedDate) : req.completedDate,
         duration: body.duration ?? req.duration,
         notes: body.notes ?? req.notes,
