@@ -37,7 +37,7 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
   
   // Role-based permissions
   const canCreateRequest = ["ADMIN", "MANAGER", "EMPLOYEE"].includes(user?.role || "")
-  const canUpdateStatus = ["ADMIN", "MANAGER", "TECHNICIAN"].includes(user?.role || "")
+  const canUpdateStatus = ["TECHNICIAN"].includes(user?.role || "")
 
   const handleMoveRequest = async (requestId: string, newStatus: string) => {
     try {

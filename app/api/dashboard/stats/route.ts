@@ -22,7 +22,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Company ID required" }, { status: 400 })
     }
 
-    const cacheKey = `dashboard:stats:${companyId}`
+    // Get requesting user (for role-based scoping)
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    })
+
+    // Use a cache key that also considers userId for technician-specific scoping
+    const cacheKey = `dashboard:stats:${companyId}${requestingUser?.role === "TECHNICIAN" ? `:tech:${userId}` : ""}`
     const cached = await getCachedData(cacheKey)
 
     if (cached) {
@@ -43,21 +50,27 @@ export async function GET(request: NextRequest) {
       _avg: { health: true },
     })
 
+    // Build where clause for requests, scoped to technician if applicable
+    const requestWhereBase: any = { companyId }
+    if (requestingUser?.role === "TECHNICIAN") {
+      requestWhereBase.assignedTechnicianId = userId
+    }
+
     // Get request stats
     const totalRequests = await prisma.maintenanceRequest.count({
-      where: { companyId },
+      where: requestWhereBase,
     })
 
     const newRequests = await prisma.maintenanceRequest.count({
-      where: { companyId, status: "NEW" },
+      where: { ...requestWhereBase, status: "NEW" },
     })
 
     const inProgressRequests = await prisma.maintenanceRequest.count({
-      where: { companyId, status: "IN_PROGRESS" },
+      where: { ...requestWhereBase, status: "IN_PROGRESS" },
     })
 
     const repairedRequests = await prisma.maintenanceRequest.count({
-      where: { companyId, status: "REPAIRED" },
+      where: { ...requestWhereBase, status: "REPAIRED" },
     })
 
     // Get team stats
@@ -76,6 +89,7 @@ export async function GET(request: NextRequest) {
         new: newRequests,
         inProgress: inProgressRequests,
         repaired: repairedRequests,
+        completed: repairedRequests, // alias for UI
         completionRate: totalRequests > 0 ? Math.round((repairedRequests / totalRequests) * 100) : 0,
       },
       teams: {
