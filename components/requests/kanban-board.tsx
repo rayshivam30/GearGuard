@@ -1,7 +1,7 @@
 "use client"
 
 import type { MaintenanceRequest, Equipment, Team } from "@prisma/client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowRight, AlertTriangle, CheckCircle, Clock, AlertCircle } from "lucide-react"
 import { RequestCard } from "./request-card"
 import { RequestForm } from "./request-form"
@@ -34,6 +34,14 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<RequestWithRelations | null>(null)
+  const [dragging, setDragging] = useState<{ id: string; status: string } | null>(null)
+  const [moving, setMoving] = useState(false)
+  const [localRequests, setLocalRequests] = useState<RequestWithRelations[]>(requests)
+
+  // Keep local requests in sync when props change (e.g., after refresh)
+  useEffect(() => {
+    setLocalRequests(requests)
+  }, [requests])
   
   // Role-based permissions
   const canCreateRequest = ["ADMIN", "MANAGER", "EMPLOYEE"].includes(user?.role || "")
@@ -49,15 +57,28 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
 
       if (response.ok) {
         onRefresh()
+        return true
       }
+      return false
     } catch (error) {
       console.error("Move error:", error)
+      return false
     }
+  }
+
+  // Determine if a drag from one status to another is allowed (technician workflow)
+  const isTransitionAllowed = (from: string, to: string) => {
+    if (from === to) return false
+    // Forward-only transitions + allow scrap from IN_PROGRESS
+    if (from === "NEW" && to === "IN_PROGRESS") return true
+    if (from === "IN_PROGRESS" && to === "REPAIRED") return true
+    if (from === "IN_PROGRESS" && to === "SCRAP") return true
+    return false
   }
 
   const requestsByStatus = statuses.reduce(
     (acc, status) => {
-      acc[status] = requests.filter((r) => r.status === status)
+      acc[status] = localRequests.filter((r) => r.status === status)
       return acc
     },
     {} as Record<string, RequestWithRelations[]>,
@@ -103,7 +124,41 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
                 <span className={`ml-auto font-bold ${config.textColor}`}>{cards.length}</span>
               </div>
 
-              <div className="flex-1 bg-slate-750 rounded-b-lg p-4 space-y-3 min-h-96 overflow-y-auto">
+              <div
+                className={`flex-1 bg-slate-750 rounded-b-lg p-4 space-y-3 min-h-96 overflow-y-auto ${
+                  dragging && isTransitionAllowed(dragging.status, status) ? "ring-2 ring-blue-500" : ""
+                }`}
+                onDragOver={(e) => {
+                  if (!canUpdateStatus) return
+                  // Always prevent default for tech so drop can fire; validate onDrop
+                  e.preventDefault()
+                  if (dragging) {
+                    try {
+                      e.dataTransfer.dropEffect = isTransitionAllowed(dragging.status, status) ? "move" : "none"
+                    } catch {}
+                  }
+                }}
+                onDrop={async (e) => {
+                  if (!canUpdateStatus || !dragging || moving) return
+                  if (!isTransitionAllowed(dragging.status, status)) return
+                  setMoving(true)
+                  const prev = localRequests
+                  // Optimistic update
+                  setLocalRequests((curr) =>
+                    curr.map((r) => (r.id === dragging.id ? { ...r, status: status as any } : r)),
+                  )
+                  try {
+                    const ok = await handleMoveRequest(dragging.id, status)
+                    if (!ok) {
+                      // Revert on failure
+                      setLocalRequests(prev)
+                    }
+                  } finally {
+                    setDragging(null)
+                    setMoving(false)
+                  }
+                }}
+              >
                 {cards.length === 0 ? (
                   <div className="flex items-center justify-center h-32 text-slate-500">
                     <p className="text-sm text-center">No requests</p>
@@ -111,41 +166,28 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
                 ) : (
                   cards.map((request) => (
                     <div key={request.id} className="space-y-2">
-                      <RequestCard 
-                        request={request} 
-                        onEdit={() => {
-                          setSelectedRequest(request)
-                          setShowForm(true)
-                        }} 
-                      />
-
-                      {canUpdateStatus && status !== "REPAIRED" && status !== "SCRAP" && status !== "CANCELLED" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            const nextStatus =
-                              status === "NEW" ? "IN_PROGRESS" : status === "IN_PROGRESS" ? "REPAIRED" : status
-                            if (nextStatus !== status) {
-                              handleMoveRequest(request.id, nextStatus)
-                            }
+                      <div
+                        draggable={
+                          canUpdateStatus && status !== "REPAIRED" && status !== "SCRAP" && status !== "CANCELLED"
+                        }
+                        onDragStart={(e) => {
+                          if (!canUpdateStatus || moving) return
+                          try {
+                            e.dataTransfer.effectAllowed = "move"
+                            e.dataTransfer.setData("text/plain", request.id)
+                          } catch {}
+                          setDragging({ id: request.id, status })
+                        }}
+                        onDragEnd={() => setDragging(null)}
+                      >
+                        <RequestCard
+                          request={request}
+                          onEdit={() => {
+                            setSelectedRequest(request)
+                            setShowForm(true)
                           }}
-                          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition text-sm font-medium"
-                        >
-                          <ArrowRight size={16} />
-                          Move Forward
-                        </button>
-                      )}
-                      {canUpdateStatus && status === "IN_PROGRESS" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleMoveRequest(request.id, "SCRAP")
-                          }}
-                          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-red-700 hover:bg-red-600 text-white rounded-lg transition text-sm font-medium"
-                        >
-                          Mark as Scrap
-                        </button>
-                      )}
+                        />
+                      </div>
                     </div>
                   ))
                 )}
