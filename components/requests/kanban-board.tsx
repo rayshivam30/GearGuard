@@ -37,6 +37,7 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
   const [dragging, setDragging] = useState<{ id: string; status: string } | null>(null)
   const [moving, setMoving] = useState(false)
   const [localRequests, setLocalRequests] = useState<RequestWithRelations[]>(requests)
+  const [showDetails, setShowDetails] = useState(false)
 
   // Keep local requests in sync when props change (e.g., after refresh)
   useEffect(() => {
@@ -184,7 +185,7 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
                           request={request}
                           onEdit={() => {
                             setSelectedRequest(request)
-                            setShowForm(true)
+                            setShowDetails(true)
                           }}
                         />
                       </div>
@@ -196,6 +197,76 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
           )
         })}
       </div>
+
+      {/* Request Details Modal */}
+      {showDetails && selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowDetails(false)} />
+          <div className="relative z-10 w-full max-w-2xl mx-4 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+              <h3 className="text-lg font-semibold text-white">Request Details</h3>
+              <button
+                onClick={() => setShowDetails(false)}
+                className="px-3 py-1.5 text-sm rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200"
+              >
+                Back
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-slate-400 mb-1">Subject</p>
+                <p className="text-white font-medium">{selectedRequest.subject}</p>
+              </div>
+              {selectedRequest.description && (
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-slate-400 mb-1">Description</p>
+                  <p className="text-slate-300 whitespace-pre-wrap">{selectedRequest.description}</p>
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                  <p className="text-xs text-slate-400">Equipment</p>
+                  <p className="text-white font-medium">{selectedRequest.equipment?.name}</p>
+                </div>
+                <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                  <p className="text-xs text-slate-400">Priority</p>
+                  <p className="text-white font-medium">{selectedRequest.priority}</p>
+                </div>
+                <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                  <p className="text-xs text-slate-400">Maintenance Type</p>
+                  <p className="text-white font-medium">{selectedRequest.maintenanceType}</p>
+                </div>
+                <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                  <p className="text-xs text-slate-400">Status</p>
+                  <p className="text-white font-medium">{selectedRequest.status}</p>
+                </div>
+                {selectedRequest.team && (
+                  <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                    <p className="text-xs text-slate-400">Team</p>
+                    <p className="text-white font-medium">{selectedRequest.team.name}</p>
+                  </div>
+                )}
+                {selectedRequest.assignedTechnician && (
+                  <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                    <p className="text-xs text-slate-400">Assigned Technician</p>
+                    <p className="text-white font-medium">{selectedRequest.assignedTechnician.name}</p>
+                  </div>
+                )}
+                {selectedRequest.scheduledDate && (
+                  <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                    <p className="text-xs text-slate-400">Scheduled Date</p>
+                    <p className="text-white font-medium">{new Date(selectedRequest.scheduledDate).toLocaleString()}</p>
+                  </div>
+                )}
+                <div className="bg-slate-750 rounded-lg p-4 border border-slate-700">
+                  <p className="text-xs text-slate-400">Requested By</p>
+                  <p className="text-white font-medium">{selectedRequest.user?.name}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
