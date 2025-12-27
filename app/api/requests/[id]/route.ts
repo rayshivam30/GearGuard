@@ -8,15 +8,17 @@ async function getUserIdFromCookie() {
   return cookieStore.get("userId")?.value
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromCookie()
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const req = await prisma.maintenanceRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         equipment: true,
         user: {
@@ -48,16 +50,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromCookie()
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const req = await prisma.maintenanceRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!req) {
@@ -95,7 +98,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     const updated = await prisma.maintenanceRequest.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         subject: body.subject ?? req.subject,
         description: body.description ?? req.description,
@@ -139,15 +142,17 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromCookie()
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const req = await prisma.maintenanceRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!req) {
@@ -155,7 +160,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     await prisma.maintenanceRequest.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     await invalidateRequestsCache(req.companyId)

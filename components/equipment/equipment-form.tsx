@@ -109,109 +109,80 @@ export function EquipmentForm({ equipment, companyId, onClose }: EquipmentFormPr
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Equipment Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-              placeholder="e.g., Samsung Monitor 15&quot;"
-            />
+          {/* Primary Information */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Equipment Name *</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                placeholder="Samsung Monitor 15&quot;"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Equipment Category *</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Serial Number</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Serial Number *</label>
             <input
               type="text"
               name="serialNumber"
               value={formData.serialNumber}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-              placeholder="e.g., MT/125/227F3837"
+              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition font-mono"
+              placeholder="MT/125/227F3837"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+          {/* Assignment Information */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Employee</label>
+              <input
+                type="text"
+                name="assignedTo"
+                value={formData.assignedTo}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                placeholder="Tejas Modi"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Department</label>
+              <input
+                type="text"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                placeholder="Admin"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Department</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-              placeholder="e.g., Admin, Technician"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Assigned To (Employee)</label>
-            <input
-              type="text"
-              name="assignedTo"
-              value={formData.assignedTo}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-              placeholder="Employee name or email"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Location</label>
-            <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-              placeholder="Physical location (e.g., Building A, Floor 2)"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Purchase Date</label>
-            <input
-              type="date"
-              name="purchaseDate"
-              value={formData.purchaseDate}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Warranty Information</label>
-            <textarea
-              name="warrantyInfo"
-              value={formData.warrantyInfo}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-              placeholder="Warranty details, expiry date, etc."
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Default Assigned Technician</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Technician</label>
             <select
               name="assignedTechnicianId"
               value={formData.assignedTechnicianId}
@@ -221,28 +192,71 @@ export function EquipmentForm({ equipment, companyId, onClose }: EquipmentFormPr
               <option value="">Select technician</option>
               {technicians.map((tech) => (
                 <option key={tech.id} value={tech.id}>
-                  {tech.name} ({tech.email})
+                  {tech.name}
                 </option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Default Maintenance Team</label>
-            <select
-              name="defaultMaintenanceTeamId"
-              value={formData.defaultMaintenanceTeamId}
-              onChange={handleChange}
-              className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
-            >
-              <option value="">Select team</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Additional Details - Collapsible section */}
+          <details className="group">
+            <summary className="cursor-pointer text-sm font-medium text-slate-400 hover:text-slate-300 transition py-2">
+              Additional Details (optional)
+            </summary>
+            <div className="space-y-4 mt-3 pt-3 border-t border-slate-700">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  placeholder="Building A, Floor 2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Purchase Date</label>
+                <input
+                  type="date"
+                  name="purchaseDate"
+                  value={formData.purchaseDate}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Warranty Information</label>
+                <textarea
+                  name="warrantyInfo"
+                  value={formData.warrantyInfo}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                  placeholder="Warranty details, expiry date, etc."
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Maintenance Team</label>
+                <select
+                  name="defaultMaintenanceTeamId"
+                  value={formData.defaultMaintenanceTeamId}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+                >
+                  <option value="">Select team</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </details>
 
           {error && <div className="p-3 bg-red-900 border border-red-700 rounded-lg text-red-200 text-sm">{error}</div>}
 

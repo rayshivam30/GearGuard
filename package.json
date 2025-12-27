@@ -7,11 +7,15 @@
   "scripts": {
     "build": "prisma generate && next build",
     "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
     "dev": "next dev",
     "lint": "eslint . --ext .ts,.tsx",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "start": "next start"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

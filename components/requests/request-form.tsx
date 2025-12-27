@@ -59,34 +59,29 @@ export function RequestForm({ request, companyId, onClose, onSuccess }: RequestF
 
   // Auto-fill logic when equipment is selected
   const handleEquipmentChange = async (equipmentId: string) => {
+    // Update form data immediately
+    setFormData((prev) => ({
+      ...prev,
+      equipmentId,
+    }))
+
     if (!equipmentId) return
 
-    const selectedEquipment = equipment.find((eq) => eq.id === equipmentId)
-    if (selectedEquipment) {
-      // Fetch full equipment details including relations
-      try {
-        const response = await fetch(`/api/equipment/${equipmentId}`)
-        if (response.ok) {
-          const equipmentData = await response.json()
-          
-          // Auto-fill category and maintenance team
-          setFormData((prev) => ({
-            ...prev,
-            equipmentId,
-            // Auto-fill category from equipment
-            // Note: We'll need to add a category field or use equipment category
-            // Auto-fill assigned team from equipment's default maintenance team
-            assignedTeam: equipmentData.defaultMaintenanceTeamId || prev.assignedTeam,
-          }))
-        }
-      } catch (error) {
-        console.error("Fetch equipment details error:", error)
+    // Try to fetch full equipment details for auto-fill
+    try {
+      const response = await fetch(`/api/equipment/${equipmentId}`)
+      if (response.ok) {
+        const equipmentData = await response.json()
+        
+        // Auto-fill assigned team from equipment's default maintenance team
+        setFormData((prev) => ({
+          ...prev,
+          assignedTeam: equipmentData.defaultMaintenanceTeamId || prev.assignedTeam,
+        }))
       }
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        equipmentId,
-      }))
+    } catch (error) {
+      console.error("Fetch equipment details error:", error)
+      // Continue even if fetch fails - equipment is already selected
     }
   }
 
