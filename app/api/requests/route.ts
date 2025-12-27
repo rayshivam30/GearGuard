@@ -23,11 +23,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Company ID required" }, { status: 400 })
     }
 
+    // Determine role of requesting user to apply technician-specific scoping
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, companyId: true },
+    })
+
+    // Base where clause: always scoped to company, optionally by status
+    const baseWhere: any = {
+      companyId,
+      ...(status && { status }),
+    }
+
+    // If technician, only return requests assigned to them
+    if (requestingUser?.role === "TECHNICIAN") {
+      baseWhere.assignedTechnicianId = userId
+    }
+
     const requests = await prisma.maintenanceRequest.findMany({
-      where: {
-        companyId,
-        ...(status && { status }),
-      },
+      where: baseWhere,
       include: {
         equipment: true,
         user: {

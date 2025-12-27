@@ -38,7 +38,6 @@ export function Navigation() {
       { href: "/equipment", label: "Equipment", roles: ["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"] },
       { href: "/requests", label: "Requests", roles: ["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"] },
       { href: "/calendar", label: "Calendar", roles: ["ADMIN", "MANAGER", "TECHNICIAN"] },
-      { href: "/teams", label: "Teams", roles: ["ADMIN", "MANAGER"] },
       { href: "/users", label: "Users", roles: ["ADMIN"] },
     ]
 
