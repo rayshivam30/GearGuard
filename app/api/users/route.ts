@@ -16,20 +16,41 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams
-    const companyId = searchParams.get("companyId")
     const role = searchParams.get("role")
 
-    // For now, return all users. In a multi-tenant system, filter by company
+    // Determine current user's company for scoping
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { companyId: true, companyName: true },
+    })
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // If the current user has no company assigned, do not return any users to avoid leaking other tenants
+    if (!currentUser.companyId && !currentUser.companyName) {
+      return NextResponse.json([])
+    }
+
     const users = await prisma.user.findMany({
-      where: {
-        ...(role && { role: role as any }),
-      },
+      where: currentUser.companyId
+        ? {
+            companyId: currentUser.companyId,
+            ...(role && { role: role as any }),
+          }
+        : {
+            companyName: currentUser.companyName as string,
+            ...(role && { role: role as any }),
+          },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
         department: true,
+        companyName: true,
+        companyId: true,
         createdAt: true,
       },
       orderBy: { name: "asc" },
@@ -49,10 +70,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user is ADMIN
+    // Check if user is ADMIN and get their company for scoping
     const currentUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      select: { role: true, companyName: true, companyId: true },
     })
 
     if (!currentUser || currentUser.role !== "ADMIN") {
@@ -60,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, password, name, role, department } = body
+    const { email, password, name, role, department, companyName } = body
 
     if (!email || !password || !name || !role) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -96,6 +117,8 @@ export async function POST(request: NextRequest) {
         name,
         role: role as any,
         department: department || null,
+        companyName: companyName || currentUser.companyName || null,
+        companyId: currentUser.companyId || null,
       },
       select: {
         id: true,
@@ -103,6 +126,8 @@ export async function POST(request: NextRequest) {
         name: true,
         role: true,
         department: true,
+        companyName: true,
+        companyId: true,
         createdAt: true,
       },
     })

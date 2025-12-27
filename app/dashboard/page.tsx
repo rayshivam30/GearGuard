@@ -6,6 +6,7 @@ import { StatCard } from "@/components/dashboard/stat-card"
 import { CriticalEquipmentAlert } from "@/components/dashboard/critical-equipment-alert"
 import { RequestTimeline } from "@/components/dashboard/request-timeline"
 import type { Equipment, MaintenanceRequest } from "@prisma/client"
+import { useAuth } from "@/lib/auth-context"
 
 interface Stats {
   equipment: {
@@ -26,6 +27,7 @@ interface Stats {
 }
 
 export default function DashboardPage() {
+  const { user, isLoading: authLoading } = useAuth()
   const [stats, setStats] = useState<Stats | null>(null)
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [requests, setRequests] = useState<(MaintenanceRequest & { equipment: Equipment })[]>([])
@@ -81,11 +83,15 @@ export default function DashboardPage() {
     )
   }
 
+  const roleTitle = user?.role
+    ? user.role.charAt(0) + user.role.slice(1).toLowerCase()
+    : ""
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-12">
-          <h1 className="text-4xl font-bold text-white mb-2">Manager Dashboard</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">{roleTitle ? `${roleTitle} Dashboard` : "Dashboard"}</h1>
           <p className="text-slate-400">Real-time overview of maintenance operations</p>
         </div>
 
@@ -165,7 +171,7 @@ export default function DashboardPage() {
                   <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
                     <span className="text-slate-300">Completed Today</span>
                     <span className="text-green-400 font-bold">
-                      {requests.filter((r) => r.status === "COMPLETED").length}
+                      {requests.filter((r) => r.status === "REPAIRED").length}
                     </span>
                   </div>
 
@@ -177,7 +183,7 @@ export default function DashboardPage() {
                   <div className="flex justify-between items-center p-3 bg-slate-700 rounded-lg">
                     <span className="text-slate-300">Critical Issues</span>
                     <span className="text-orange-400 font-bold">
-                      {requests.filter((r) => r.priority === "CRITICAL" && r.status !== "COMPLETED").length}
+                      {requests.filter((r) => r.priority === "CRITICAL" && r.status !== "REPAIRED").length}
                     </span>
                   </div>
                 </div>

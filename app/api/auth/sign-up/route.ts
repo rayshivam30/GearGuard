@@ -46,24 +46,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Company name is required" }, { status: 400 })
     }
 
+    let companyId: string | null = null
     if (userRole === "ADMIN") {
       // Admin: must create a NEW company. Error if a company with same name already exists.
       const existingCompany = await prisma.company.findFirst({ where: { name: companyName } })
       if (existingCompany) {
         return NextResponse.json({ error: "Company already exists" }, { status: 409 })
       }
-      await prisma.company.create({
+      const created = await prisma.company.create({
         data: {
           name: companyName,
           location: company.location || "",
         },
       })
+      companyId = created.id
     } else {
       // Non-admin: must register to an EXISTING company by name
       const targetCompany = await prisma.company.findFirst({ where: { name: companyName } })
       if (!targetCompany) {
         return NextResponse.json({ error: "Company doesn't exist" }, { status: 404 })
       }
+      companyId = targetCompany.id
     }
 
     // Create user with determined role
@@ -73,6 +76,8 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         name,
         role: userRole as any,
+        companyName: companyName,
+        companyId: companyId!,
       },
     })
 
@@ -87,8 +92,12 @@ export async function POST(request: NextRequest) {
     })
 
     return response
-  } catch (error) {
+  } catch (error: any) {
     console.error("Sign-up error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const errPayload: any = { error: "Sign-up failed" }
+    if (error?.code) errPayload.code = error.code
+    if (error?.message) errPayload.details = error.message
+    if (error?.meta) errPayload.meta = error.meta
+    return NextResponse.json(errPayload, { status: 500 })
   }
 }
