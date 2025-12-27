@@ -2,7 +2,7 @@
 
 import type { User } from "@prisma/client"
 import { useState } from "react"
-import { Edit2, Trash2, Plus, Shield, User as UserIcon, Wrench, Briefcase } from "lucide-react"
+import { Plus, Shield, User as UserIcon, Wrench, Briefcase } from "lucide-react"
 import { UserForm } from "./user-form"
 
 interface UsersTableProps {
@@ -20,35 +20,7 @@ const roleConfig = {
 export function UsersTable({ users, onRefresh }: UsersTableProps) {
   const [showForm, setShowForm] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
-
-  const handleEdit = (user: User) => {
-    setSelectedUser(user)
-    setShowForm(true)
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return
-
-    setDeleteLoading(id)
-    try {
-      const response = await fetch(`/api/users/${id}`, {
-        method: "DELETE",
-      })
-
-      if (response.ok) {
-        onRefresh()
-      } else {
-        const error = await response.json()
-        alert(error.error || "Failed to delete user")
-      }
-    } catch (error) {
-      console.error("Delete error:", error)
-      alert("Failed to delete user")
-    } finally {
-      setDeleteLoading(null)
-    }
-  }
+  const [_deleteLoading] = useState<string | null>(null)
 
   const handleFormClose = () => {
     setShowForm(false)
@@ -83,7 +55,6 @@ export function UsersTable({ users, onRefresh }: UsersTableProps) {
               <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Role</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Department</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Created</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-slate-300">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
@@ -104,23 +75,6 @@ export function UsersTable({ users, onRefresh }: UsersTableProps) {
                   <td className="px-6 py-4 text-slate-300">{user.department || "-"}</td>
                   <td className="px-6 py-4 text-slate-300 text-sm">
                     {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(user)}
-                        className="p-2 hover:bg-slate-600 text-slate-300 hover:text-white rounded transition"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        disabled={deleteLoading === user.id}
-                        className="p-2 hover:bg-red-900 text-slate-300 hover:text-red-200 rounded transition disabled:opacity-50"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
                   </td>
                 </tr>
               )

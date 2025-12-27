@@ -117,14 +117,31 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 })
     }
 
-    await prisma.user.delete({
-      where: { id: params.id },
-    })
+    // Clean up references that block deletion (FK constraints)
+    await prisma.$transaction([
+      prisma.equipment.updateMany({
+        where: { assignedTechnicianId: params.id },
+        data: { assignedTechnicianId: null },
+      }),
+      prisma.maintenanceRequest.updateMany({
+        where: { assignedTechnicianId: params.id },
+        data: { assignedTechnicianId: null },
+      }),
+      prisma.user.delete({ where: { id: params.id } }),
+    ])
 
     return NextResponse.json({ message: "User deleted" })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Delete user error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const payload: any = { error: "Failed to delete user" }
+    if (error?.code) payload.code = error.code
+    if (error?.message) payload.details = error.message
+    if (error?.meta) payload.meta = error.meta
+    if (error?.code === 'P2025') {
+      payload.error = 'User not found'
+      return NextResponse.json(payload, { status: 404 })
+    }
+    return NextResponse.json(payload, { status: 500 })
   }
 }
 
