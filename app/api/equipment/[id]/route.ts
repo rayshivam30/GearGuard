@@ -8,15 +8,17 @@ async function getUserIdFromCookie() {
   return cookieStore.get("userId")?.value
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromCookie()
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const equipment = await prisma.equipment.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { 
         company: true, 
         maintenanceRequests: {
@@ -44,16 +46,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromCookie()
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const equipment = await prisma.equipment.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!equipment) {
@@ -61,7 +64,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     const updated = await prisma.equipment.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: body.name ?? equipment.name,
         category: body.category ?? equipment.category,
@@ -97,15 +100,17 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await getUserIdFromCookie()
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const equipment = await prisma.equipment.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!equipment) {
@@ -113,7 +118,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     await prisma.equipment.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     await invalidateEquipmentCache(equipment.companyId)

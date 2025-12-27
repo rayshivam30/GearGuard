@@ -111,11 +111,18 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
                 ) : (
                   cards.map((request) => (
                     <div key={request.id} className="space-y-2">
-                      <RequestCard request={request} onEdit={() => setShowForm(true)} />
+                      <RequestCard 
+                        request={request} 
+                        onEdit={() => {
+                          setSelectedRequest(request)
+                          setShowForm(true)
+                        }} 
+                      />
 
                       {canUpdateStatus && status !== "REPAIRED" && status !== "SCRAP" && status !== "CANCELLED" && (
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation()
                             const nextStatus =
                               status === "NEW" ? "IN_PROGRESS" : status === "IN_PROGRESS" ? "REPAIRED" : status
                             if (nextStatus !== status) {
@@ -130,7 +137,10 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
                       )}
                       {canUpdateStatus && status === "IN_PROGRESS" && (
                         <button
-                          onClick={() => handleMoveRequest(request.id, "SCRAP")}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleMoveRequest(request.id, "SCRAP")
+                          }}
                           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-red-700 hover:bg-red-600 text-white rounded-lg transition text-sm font-medium"
                         >
                           Mark as Scrap
