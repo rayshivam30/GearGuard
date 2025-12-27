@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
@@ -16,10 +16,31 @@ export default function SignUpPage() {
     confirmPassword: "",
     name: "",
     companyName: "",
+    role: "EMPLOYEE", // Default role
+  })
+  const [isFirstUser, setIsFirstUser] = useState(false)
+
+  // Check if this is the first user (to allow ADMIN role)
+  useEffect(() => {
+    const checkFirstUser = async () => {
+      try {
+        const response = await fetch("/api/auth/check-first-user")
+        if (response.ok) {
+          const data = await response.json()
+          setIsFirstUser(data.isFirstUser)
+          if (data.isFirstUser) {
+            setFormData(prev => ({ ...prev, role: "ADMIN" }))
+          }
+        }
+      } catch (error) {
+        console.error("Error checking first user:", error)
+      }
+    }
+    checkFirstUser()
   })
   const [error, setError] = useState("")
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -36,7 +57,9 @@ export default function SignUpPage() {
     }
 
     try {
-      await signUp(formData.email, formData.password, formData.name, { name: formData.companyName })
+      await signUp(formData.email, formData.password, formData.name, { 
+        name: formData.companyName
+      }, formData.role)
       router.push("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed")
@@ -84,6 +107,36 @@ export default function SignUpPage() {
               required
               className="w-full px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Role</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
+            >
+              {isFirstUser ? (
+                <option value="ADMIN">Admin (First User)</option>
+              ) : (
+                <>
+                  <option value="EMPLOYEE">Employee</option>
+                  <option value="TECHNICIAN">Technician</option>
+                  <option value="MANAGER">Manager</option>
+                </>
+              )}
+            </select>
+            {isFirstUser && (
+              <p className="text-xs text-blue-400 mt-1">
+                ⭐ You're the first user! You'll be the Admin.
+              </p>
+            )}
+            {!isFirstUser && (
+              <p className="text-xs text-slate-400 mt-1">
+                Admin role is only available to the first user. Contact your administrator to change roles.
+              </p>
+            )}
           </div>
 
           <div>

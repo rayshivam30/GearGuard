@@ -5,6 +5,7 @@ import { useState } from "react"
 import { ArrowRight, AlertTriangle, CheckCircle, Clock, AlertCircle } from "lucide-react"
 import { RequestCard } from "./request-card"
 import { RequestForm } from "./request-form"
+import { useAuth } from "@/lib/auth-context"
 
 interface RequestWithRelations extends MaintenanceRequest {
   equipment: Equipment
@@ -30,8 +31,13 @@ const statusConfig = {
 }
 
 export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps) {
+  const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<RequestWithRelations | null>(null)
+  
+  // Role-based permissions
+  const canCreateRequest = ["ADMIN", "MANAGER", "EMPLOYEE"].includes(user?.role || "")
+  const canUpdateStatus = ["ADMIN", "MANAGER", "TECHNICIAN"].includes(user?.role || "")
 
   const handleMoveRequest = async (requestId: string, newStatus: string) => {
     try {
@@ -61,15 +67,17 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white">Maintenance Requests</h2>
-        <button
-          onClick={() => {
-            setSelectedRequest(null)
-            setShowForm(true)
-          }}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium"
-        >
-          New Request
-        </button>
+        {canCreateRequest && (
+          <button
+            onClick={() => {
+              setSelectedRequest(null)
+              setShowForm(true)
+            }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium"
+          >
+            New Request
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -105,7 +113,7 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
                     <div key={request.id} className="space-y-2">
                       <RequestCard request={request} onEdit={() => setShowForm(true)} />
 
-                      {status !== "REPAIRED" && status !== "SCRAP" && status !== "CANCELLED" && (
+                      {canUpdateStatus && status !== "REPAIRED" && status !== "SCRAP" && status !== "CANCELLED" && (
                         <button
                           onClick={() => {
                             const nextStatus =
@@ -120,7 +128,7 @@ export function KanbanBoard({ requests, companyId, onRefresh }: KanbanBoardProps
                           Move Forward
                         </button>
                       )}
-                      {status === "IN_PROGRESS" && (
+                      {canUpdateStatus && status === "IN_PROGRESS" && (
                         <button
                           onClick={() => handleMoveRequest(request.id, "SCRAP")}
                           className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-red-700 hover:bg-red-600 text-white rounded-lg transition text-sm font-medium"

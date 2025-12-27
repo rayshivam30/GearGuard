@@ -50,7 +50,6 @@ GearGuard is a maintenance management system that connects **Equipment**, **Team
 - **Equipment** (`/equipment`) - Manage all company assets
 - **Teams** (`/teams`) - Manage maintenance teams
 - **Requests** (`/requests`) - Kanban board for maintenance requests
-- **Work Centers** (`/work-centers`) - Production centers management
 - **Calendar** (`/calendar`) - Preventive maintenance scheduling
 
 ---

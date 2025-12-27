@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { AlertCircle, Edit2, Trash2, Plus, Wrench } from "lucide-react"
 import { EquipmentForm } from "./equipment-form"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 
 interface EquipmentTableProps {
   equipment: Equipment[]
@@ -29,10 +30,16 @@ const categoryIcons: Record<string, string> = {
 
 export function EquipmentTable({ equipment, companyId, onRefresh }: EquipmentTableProps) {
   const router = useRouter()
+  const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [requestCounts, setRequestCounts] = useState<Record<string, number>>({})
+  
+  // Role-based permissions
+  const canCreate = ["ADMIN", "MANAGER"].includes(user?.role || "")
+  const canEdit = ["ADMIN", "MANAGER", "TECHNICIAN"].includes(user?.role || "")
+  const canDelete = ["ADMIN", "MANAGER"].includes(user?.role || "")
 
   // Fetch request counts for each equipment
   useEffect(() => {
@@ -90,16 +97,18 @@ export function EquipmentTable({ equipment, companyId, onRefresh }: EquipmentTab
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-white">Equipment</h2>
-        <button
-          onClick={() => {
-            setSelectedEquipment(null)
-            setShowForm(true)
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-        >
-          <Plus size={18} />
-          New Equipment
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => {
+              setSelectedEquipment(null)
+              setShowForm(true)
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+          >
+            <Plus size={18} />
+            New Equipment
+          </button>
+        )}
       </div>
 
       {showForm && <EquipmentForm equipment={selectedEquipment} companyId={companyId} onClose={handleFormClose} />}
@@ -166,19 +175,25 @@ export function EquipmentTable({ equipment, companyId, onRefresh }: EquipmentTab
                         </span>
                       )}
                     </button>
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="p-2 hover:bg-slate-600 text-slate-300 hover:text-white rounded transition"
-                    >
-                      <Edit2 size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deleteLoading === item.id}
-                      className="p-2 hover:bg-red-900 text-slate-300 hover:text-red-200 rounded transition disabled:opacity-50"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="p-2 hover:bg-slate-600 text-slate-300 hover:text-white rounded transition"
+                        title="Edit Equipment"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deleteLoading === item.id}
+                        className="p-2 hover:bg-red-900 text-slate-300 hover:text-red-200 rounded transition disabled:opacity-50"
+                        title="Delete Equipment"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

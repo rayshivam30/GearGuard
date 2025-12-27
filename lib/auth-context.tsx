@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 interface AuthContextType {
   user: { id: string; email: string; name: string; role: string } | null
   isLoading: boolean
-  signUp: (email: string, password: string, name: string, company: any) => Promise<void>
+  signUp: (email: string, password: string, name: string, company: any, role?: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   isAuthenticated: boolean
@@ -35,13 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUser()
   }, [])
 
-  const signUp = useCallback(async (email: string, password: string, name: string, company: any) => {
+  const signUp = useCallback(async (email: string, password: string, name: string, company: any, role?: string) => {
     setIsLoading(true)
     try {
       const response = await fetch("/api/auth/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, company }),
+        body: JSON.stringify({ email, password, name, company, role }),
       })
 
       if (!response.ok) {

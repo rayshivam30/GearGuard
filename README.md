@@ -96,7 +96,6 @@ gearguard/
 │   │   ├── equipment/         # Equipment CRUD
 │   │   ├── teams/             # Team management
 │   │   ├── requests/          # Maintenance requests
-│   │   ├── work-centers/      # Work center management
 │   │   └── dashboard/         # Analytics
 │   ├── layout.tsx             # Root layout with navigation
 │   ├── globals.css            # Global styles
@@ -106,13 +105,11 @@ gearguard/
 │   ├── equipment/             # Equipment list
 │   ├── teams/                 # Teams list
 │   ├── requests/              # Requests Kanban
-│   └── work-centers/          # Work centers list
 ├── components/
 │   ├── navigation.tsx         # Main navigation
 │   ├── equipment/             # Equipment components
 │   ├── teams/                 # Team components
 │   ├── requests/              # Request components
-│   ├── work-centers/          # Work center components
 │   └── dashboard/             # Dashboard components
 ├── lib/
 │   ├── prisma.ts             # Prisma singleton
@@ -136,7 +133,6 @@ gearguard/
 - **Equipment** - Inventory with health tracking and status
 - **MaintenanceRequests** - Service requests with priority and workflow status
 - **Teams** - Maintenance teams with member assignments
-- **WorkCenters** - Production centers with cost and efficiency metrics
 
 ### Relationships
 - Equipment → Company (belongs to)
@@ -144,7 +140,6 @@ gearguard/
 - MaintenanceRequests → User (requested by)
 - MaintenanceRequests → Team (assigned to)
 - Teams → Users (many-to-many through TeamMembers)
-- WorkCenters → Equipment (many-to-many through Assignments)
 
 ## API Endpoints
 
@@ -172,13 +167,6 @@ gearguard/
 - `POST /api/requests` - Create request
 - `PATCH /api/requests/[id]` - Update request
 - `DELETE /api/requests/[id]` - Delete request
-
-### Work Centers
-- `GET /api/work-centers` - List work centers
-- `POST /api/work-centers` - Create work center
-- `PATCH /api/work-centers/[id]` - Update work center
-- `DELETE /api/work-centers/[id]` - Delete work center
-- `POST /api/work-centers/[id]/assign` - Assign equipment
 
 ### Dashboard
 - `GET /api/dashboard/stats` - Get analytics and statistics

@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Calendar } from "@/components/ui/calendar"
 import type { MaintenanceRequest, Equipment } from "@prisma/client"
 import { format, isSameDay } from "date-fns"
 import { Plus } from "lucide-react"
 import { RequestForm } from "@/components/requests/request-form"
+import { useAuth } from "@/lib/auth-context"
 
 interface RequestWithRelations extends MaintenanceRequest {
   equipment: Equipment
@@ -14,11 +16,20 @@ interface RequestWithRelations extends MaintenanceRequest {
 }
 
 export default function CalendarPage() {
+  const router = useRouter()
+  const { user } = useAuth()
   const [requests, setRequests] = useState<RequestWithRelations[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [showForm, setShowForm] = useState(false)
   const [companyId] = useState("default-company")
+
+  useEffect(() => {
+    // Only ADMIN, MANAGER, and TECHNICIAN can access calendar
+    if (user && !["ADMIN", "MANAGER", "TECHNICIAN"].includes(user.role)) {
+      router.push("/dashboard")
+    }
+  }, [user, router])
 
   const fetchRequests = async () => {
     try {

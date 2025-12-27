@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     validateEnv()
     const body = await request.json()
-    const { email, password, name, company } = body
+    const { email, password, name, company, role } = body
 
     // Validation
     if (!email || !password || !name || !company) {
@@ -30,9 +30,32 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Create company if needed
+    // Check if this is the first user (no users exist)
+    const userCount = await prisma.user.count()
+    const isFirstUser = userCount === 0
+
+    // Determine role: First user = ADMIN, others can select (default EMPLOYEE)
+    let userRole = body.role || "EMPLOYEE"
+    
+    // Security: Only allow ADMIN role if this is the first user
+    if (userRole === "ADMIN" && !isFirstUser) {
+      return NextResponse.json({ error: "ADMIN role can only be assigned to the first user" }, { status: 403 })
+    }
+    
+    // First user is always ADMIN
+    if (isFirstUser) {
+      userRole = "ADMIN"
+    }
+
+    // Validate role
+    const validRoles = ["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"]
+    if (!validRoles.includes(userRole)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 })
+    }
+
+    // Create company if needed (only for first user)
     let companyId = company.id
-    if (!companyId) {
+    if (!companyId && isFirstUser) {
       const newCompany = await prisma.company.create({
         data: {
           name: company.name,
@@ -40,15 +63,30 @@ export async function POST(request: NextRequest) {
         },
       })
       companyId = newCompany.id
+    } else if (!companyId) {
+      // For subsequent users, use the first company (or implement company selection)
+      const firstCompany = await prisma.company.findFirst()
+      if (firstCompany) {
+        companyId = firstCompany.id
+      } else {
+        // Fallback: create company
+        const newCompany = await prisma.company.create({
+          data: {
+            name: company.name || "Default Company",
+            location: company.location || "",
+          },
+        })
+        companyId = newCompany.id
+      }
     }
 
-    // Create user with admin role
+    // Create user with determined role
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
-        role: "ADMIN",
+        role: userRole as any,
       },
     })
 

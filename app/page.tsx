@@ -11,26 +11,14 @@ export default function HomePage() {
   const { user, isLoading } = useAuth()
 
   useEffect(() => {
-    // If user is logged in, redirect to dashboard immediately
+    // Only redirect if user is logged in (after loading completes)
     if (!isLoading && user) {
       router.replace("/dashboard")
     }
   }, [user, isLoading, router])
 
-  // Show loading state while checking auth
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // If user is logged in, show nothing while redirecting
-  if (user) {
+  // If user is logged in, show minimal redirect message
+  if (!isLoading && user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
         <div className="text-center">
@@ -40,6 +28,8 @@ export default function HomePage() {
       </div>
     )
   }
+
+  // Show landing page immediately for non-logged-in users (even while loading)
 
   // Landing page for non-authenticated users
   return (

@@ -24,7 +24,6 @@ model User {
   assignedMaintenanceRequests MaintenanceRequest[] @relation("AssignedTechnician")
   assignedEquipment    Equipment[] @relation("EquipmentTechnician")
   teamMemberships     TeamMember[]
-  workCenterAssignments WorkCenterAssignment[]
 
   @@map("users")
 }
@@ -45,7 +44,6 @@ model Company {
 
   equipment            Equipment[]
   teams                Team[]
-  workCenters          WorkCenter[]
   maintenanceRequests  MaintenanceRequest[]
 
   @@map("companies")
@@ -75,7 +73,6 @@ model Equipment {
   updatedAt               DateTime  @updatedAt
 
   maintenanceRequests MaintenanceRequest[]
-  workCenterAssignments WorkCenterAssignment[]
 
   @@map("equipment")
 }
@@ -163,38 +160,4 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@map("team_members")
-}
-
-model WorkCenter {
-  id              String    @id @default(cuid())
-  name            String
-  code            String    @unique
-  location        String?
-  costPerHour     Float     @default(0)
-  capabilityTimeEfficiency Float @default(100)
-  oeTargetPercentage Float @default(85)
-  companyId       String
-  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  assignments     WorkCenterAssignment[]
-
-  @@map("work_centers")
-}
-
-model WorkCenterAssignment {
-  id            String      @id @default(cuid())
-  workCenterId  String
-  workCenter    WorkCenter  @relation(fields: [workCenterId], references: [id], onDelete: Cascade)
-  equipmentId   String
-  equipment     Equipment   @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
-  alternativeWorkCenters String? // JSON string of alternative WC IDs
-  assignedBy    String      // User ID
-  user          User        @relation(fields: [assignedBy], references: [id])
-  assignedAt    DateTime    @default(now())
-  removedAt     DateTime?
-
-  @@unique([workCenterId, equipmentId])
-  @@map("work_center_assignments")
 }

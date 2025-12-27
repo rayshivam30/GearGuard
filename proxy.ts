@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-const protectedRoutes = ["/dashboard", "/equipment", "/teams", "/requests", "/work-centers", "/users", "/calendar"]
+const protectedRoutes = ["/dashboard", "/equipment", "/teams", "/requests", "/users", "/calendar"]
 
 export function proxy(request: NextRequest) {
   const userId = request.cookies.get("userId")?.value

@@ -25,15 +25,24 @@ export function Navigation() {
     return null
   }
 
-  const navItems = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/equipment", label: "Equipment" },
-    { href: "/teams", label: "Teams" },
-    { href: "/requests", label: "Requests" },
-    { href: "/calendar", label: "Calendar" },
-    { href: "/work-centers", label: "Work Centers" },
-    ...(user?.role === "ADMIN" ? [{ href: "/users", label: "Users" }] : []),
-  ]
+  // Role-based navigation items
+  const getNavItems = () => {
+    const role = user?.role
+    const baseItems = [
+      { href: "/dashboard", label: "Dashboard", roles: ["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"] },
+      { href: "/equipment", label: "Equipment", roles: ["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"] },
+      { href: "/requests", label: "Requests", roles: ["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"] },
+      { href: "/calendar", label: "Calendar", roles: ["ADMIN", "MANAGER", "TECHNICIAN"] },
+      { href: "/teams", label: "Teams", roles: ["ADMIN", "MANAGER"] },
+      { href: "/users", label: "Users", roles: ["ADMIN"] },
+    ]
+
+    if (!role) return []
+    
+    return baseItems.filter(item => item.roles.includes(role))
+  }
+
+  const navItems = getNavItems()
 
   const isActive = (href: string) => pathname === href
 

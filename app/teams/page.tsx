@@ -1,17 +1,28 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { TeamsTable } from "@/components/teams/teams-table"
 import type { Team, TeamMember, User } from "@prisma/client"
+import { useAuth } from "@/lib/auth-context"
 
 interface TeamWithMembers extends Team {
   members: (TeamMember & { user: User })[]
 }
 
 export default function TeamsPage() {
+  const router = useRouter()
+  const { user } = useAuth()
   const [teams, setTeams] = useState<TeamWithMembers[]>([])
   const [loading, setLoading] = useState(true)
   const [companyId] = useState("default-company")
+
+  useEffect(() => {
+    // Only ADMIN and MANAGER can access teams
+    if (user && !["ADMIN", "MANAGER"].includes(user.role)) {
+      router.push("/dashboard")
+    }
+  }, [user, router])
 
   const fetchTeams = async () => {
     try {
