@@ -84,54 +84,81 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 py-10">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Maintenance Calendar</h1>
-          <p className="text-slate-400">Schedule and view preventive maintenance</p>
-          {user.companyName && (
-            <p className="text-slate-500 text-sm mt-2">Company: {user.companyName}</p>
-          )}
+        <div className="mb-8 flex flex-col gap-2">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">Maintenance Calendar</h1>
+          <p className="text-sm text-slate-300">Schedule and view preventive maintenance</p>
+          {user.companyName && <p className="text-slate-400 text-sm">Company: {user.companyName}</p>}
         </div>
 
         {!user.companyId ? (
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-12 text-center">
+          <div className="rounded-2xl bg-slate-800/60 border border-slate-700/60 p-10 text-center shadow-xl shadow-black/20">
             <Building2 className="mx-auto mb-4 text-slate-500" size={40} />
             <p className="text-slate-400 mb-4">You are not assigned to a company yet. Please contact your administrator.</p>
           </div>
         ) : loading ? (
-          <div className="flex items-center justify-center p-12 bg-slate-800 rounded-lg border border-slate-700">
-            <p className="text-slate-400">Loading calendar...</p>
+          <div className="flex items-center justify-center p-12 rounded-2xl bg-slate-800/60 border border-slate-700/60 shadow-xl shadow-black/20">
+            <p className="text-slate-300">Loading calendar...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+              <div className="rounded-2xl bg-slate-800/50 ring-1 ring-slate-700/60 p-6 shadow-xl shadow-black/20">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={handleDateClick}
-                  className="rounded-md border"
+                  className="w-full rounded-xl [--cell-size:44px] sm:[--cell-size:52px]"
+                  classNames={{
+                    root: "w-full flex justify-center",
+                    months: "w-full flex justify-center relative",
+                    month: "w-fit relative",
+                    table: "w-fit border-collapse",
+                    weekdays: "grid grid-cols-7 gap-2 justify-center",
+                    week: "grid grid-cols-7 gap-2 justify-center mt-2",
+                    weekday: "text-white/85 text-xs font-semibold text-center",
+                    day: "relative p-0",
+                    day_button:
+                      "text-white hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-500/50",
+                    outside: "text-white/35",
+                    today: "bg-white/10 text-white ring-1 ring-white/10",
+                    nav: "flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between",
+                    button_previous: "text-white/80 hover:bg-white/10",
+                    button_next: "text-white/80 hover:bg-white/10",
+                    month_caption:
+                      "flex items-center justify-center h-(--cell-size) w-full px-(--cell-size) text-white font-semibold",
+                    caption_label: "text-white font-semibold",
+                  }}
                   modifiers={{
                     hasRequests: (date) => getRequestsForDate(date).length > 0,
                   }}
                   modifiersClassNames={{
-                    hasRequests: "bg-blue-500 text-white rounded-full",
+                    hasRequests: "bg-blue-500/25 text-white ring-1 ring-blue-400/50",
                   }}
                 />
+                <div className="mt-4 flex items-center gap-3 text-xs text-slate-300">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-blue-400" />
+                    Days with scheduled preventive maintenance
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-white">
+              <div className="rounded-2xl bg-slate-800/50 ring-1 ring-slate-700/60 p-6 shadow-xl shadow-black/20">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
                     {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Select a date"}
-                  </h2>
+                    </h2>
+                    <p className="text-xs text-slate-400">Preventive maintenance schedule</p>
+                  </div>
                   {selectedDate && (
                     <button
                       onClick={() => setShowForm(true)}
-                      className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm shadow-blue-600/25 ring-1 ring-blue-500/30 transition hover:bg-blue-500"
                       title="Schedule new maintenance"
                     >
                       <Plus size={20} />
@@ -141,11 +168,11 @@ export default function CalendarPage() {
 
                 {selectedDateRequests.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-slate-400 mb-4">No scheduled maintenance for this date</p>
+                    <p className="text-slate-300 mb-4">No scheduled maintenance for this date</p>
                     {selectedDate && (
                       <button
                         onClick={() => setShowForm(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                        className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 ring-1 ring-blue-500/30 transition hover:bg-blue-500"
                       >
                         Schedule Maintenance
                       </button>
@@ -160,10 +187,10 @@ export default function CalendarPage() {
                           setSelectedRequest(request)
                           setShowDetails(true)
                         }}
-                        className="w-full text-left bg-slate-700 hover:bg-slate-650 rounded-lg p-4 border border-slate-600 transition cursor-pointer"
+                        className="w-full text-left rounded-xl bg-black/10 p-4 ring-1 ring-white/10 transition hover:bg-white/5 cursor-pointer"
                       >
-                        <h3 className="font-semibold text-white mb-1">{request.subject}</h3>
-                        <p className="text-sm text-slate-400">Equipment: {request.equipment.name}</p>
+                        <h3 className="font-semibold text-white mb-1 line-clamp-2">{request.subject}</h3>
+                        <p className="text-sm text-slate-300/80">Equipment: {request.equipment.name}</p>
                         <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
                           <span>Priority: {request.priority}</span>
                           {request.maintenanceType && <span>Type: {request.maintenanceType}</span>}
@@ -197,13 +224,13 @@ export default function CalendarPage() {
         {/* Request Details Modal */}
         {showDetails && selectedRequest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/60" onClick={() => setShowDetails(false)} />
-            <div className="relative z-10 w-full max-w-2xl mx-4 rounded-xl bg-slate-800 border border-slate-700 shadow-2xl">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDetails(false)} />
+            <div className="relative z-10 w-full max-w-2xl mx-4 overflow-hidden rounded-2xl bg-slate-800/80 ring-1 ring-slate-700/70 shadow-2xl shadow-black/40">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/60 bg-slate-900/40">
                 <h3 className="text-lg font-semibold text-white">Request Details</h3>
                 <button
                   onClick={() => setShowDetails(false)}
-                  className="px-3 py-1.5 text-sm rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 cursor-pointer"
+                  className="inline-flex items-center justify-center rounded-lg bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white cursor-pointer"
                 >
                   Back
                 </button>
