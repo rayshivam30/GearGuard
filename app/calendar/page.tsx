@@ -28,8 +28,8 @@ export default function CalendarPage() {
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
-    // Only ADMIN, MANAGER, and TECHNICIAN can access calendar
-    if (user && !["ADMIN", "MANAGER", "TECHNICIAN"].includes(user.role)) {
+    // Allow ADMIN, MANAGER, TECHNICIAN, and EMPLOYEE to access calendar
+    if (user && !["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"].includes(user.role)) {
       router.push("/dashboard")
     }
   }, [user, router])
