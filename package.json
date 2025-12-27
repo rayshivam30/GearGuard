@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Enterprise maintenance tracking and equipment management system",
+  "packageManager": "pnpm@8.15.0",
   "scripts": {
-    "build": "next build && prisma generate",
+    "build": "prisma generate && next build",
     "db:push": "prisma db push",
     "dev": "next dev",
     "lint": "eslint . --ext .ts,.tsx",
