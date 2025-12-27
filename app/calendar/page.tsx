@@ -75,8 +75,6 @@ export default function CalendarPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
   if (!user) {
     return null
   }
