@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String
+  role      Role       @default(TECHNICIAN)
+  department String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  maintenanceRequests MaintenanceRequest[]
+  assignedMaintenanceRequests MaintenanceRequest[] @relation("AssignedTechnician")
+  assignedEquipment    Equipment[] @relation("EquipmentTechnician")
+  teamMemberships     TeamMember[]
+  workCenterAssignments WorkCenterAssignment[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  EMPLOYEE
+}
+
+model Company {
+  id        String     @id @default(cuid())
+  name      String
+  location  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  equipment            Equipment[]
+  teams                Team[]
+  workCenters          WorkCenter[]
+  maintenanceRequests  MaintenanceRequest[]
+
+  @@map("companies")
+}
+
+model Equipment {
+  id                      String    @id @default(cuid())
+  name                    String
+  serialNumber            String    @unique
+  category                String    // Monitors, Computers, etc.
+  department              String?
+  assignedTo              String?   // Employee/User email
+  location                String?   // Physical location
+  purchaseDate            DateTime?
+  warrantyInfo            String?   // Warranty information
+  assignedTechnicianId    String?   // Default assigned technician (User ID)
+  assignedTechnician      User?     @relation("EquipmentTechnician", fields: [assignedTechnicianId], references: [id])
+  defaultMaintenanceTeamId String?  // Default maintenance team
+  defaultMaintenanceTeam  Team?     @relation("EquipmentDefaultTeam", fields: [defaultMaintenanceTeamId], references: [id])
+  health                  Int       @default(100) // Health percentage 0-100
+  lastMaintenance         DateTime?
+  nextScheduled           DateTime?
+  status                  EquipmentStatus @default(OPERATIONAL)
+  companyId               String
+  company                 Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  maintenanceRequests MaintenanceRequest[]
+  workCenterAssignments WorkCenterAssignment[]
+
+  @@map("equipment")
+}
+
+enum EquipmentStatus {
+  OPERATIONAL
+  MAINTENANCE_REQUIRED
+  OUT_OF_SERVICE
+  CRITICAL
+}
+
+model MaintenanceRequest {
+  id                  String      @id @default(cuid())
+  subject             String
+  description         String?
+  equipmentId         String
+  equipment           Equipment   @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  requestedBy         String      // User ID
+  user                User        @relation(fields: [requestedBy], references: [id], onDelete: Cascade)
+  assignedTechnicianId String?    // Assigned technician (User ID)
+  assignedTechnician  User?       @relation("AssignedTechnician", fields: [assignedTechnicianId], references: [id])
+  companyId           String
+  company             Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  status              RequestStatus @default(NEW)
+  maintenanceType     MaintenanceType @default(CORRECTIVE)
+  priority            Priority    @default(MEDIUM)
+  assignedTeam        String?     // Team ID
+  team                Team?       @relation(fields: [assignedTeam], references: [id])
+  scheduledDate       DateTime?
+  completedDate       DateTime?
+  duration            Int?        // In minutes (Hours Spent)
+  notes               String?
+  instructions        String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@map("maintenance_requests")
+}
+
+enum RequestStatus {
+  NEW
+  IN_PROGRESS
+  REPAIRED
+  SCRAP
+  CANCELLED
+}
+
+enum MaintenanceType {
+  CORRECTIVE
+  PREVENTIVE
+  PREDICTIVE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Team {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  companyId   String
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  members     TeamMember[]
+  requests    MaintenanceRequest[]
+  defaultEquipment Equipment[] @relation("EquipmentDefaultTeam")
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String    @id @default(cuid())
+  teamId    String
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String    @default("Technician")
+  joinedAt  DateTime  @default(now())
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model WorkCenter {
+  id              String    @id @default(cuid())
+  name            String
+  code            String    @unique
+  location        String?
+  costPerHour     Float     @default(0)
+  capabilityTimeEfficiency Float @default(100)
+  oeTargetPercentage Float @default(85)
+  companyId       String
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  assignments     WorkCenterAssignment[]
+
+  @@map("work_centers")
+}
+
+model WorkCenterAssignment {
+  id            String      @id @default(cuid())
+  workCenterId  String
+  workCenter    WorkCenter  @relation(fields: [workCenterId], references: [id], onDelete: Cascade)
+  equipmentId   String
+  equipment     Equipment   @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  alternativeWorkCenters String? // JSON string of alternative WC IDs
+  assignedBy    String      // User ID
+  user          User        @relation(fields: [assignedBy], references: [id])
+  assignedAt    DateTime    @default(now())
+  removedAt     DateTime?
+
+  @@unique([workCenterId, equipmentId])
+  @@map("work_center_assignments")
+}
