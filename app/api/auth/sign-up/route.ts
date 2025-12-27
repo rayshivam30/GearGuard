@@ -30,22 +30,8 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hashPassword(password)
 
-    // Check if this is the first user (no users exist)
-    const userCount = await prisma.user.count()
-    const isFirstUser = userCount === 0
-
-    // Determine role: First user = ADMIN, others can select (default EMPLOYEE)
-    let userRole = body.role || "EMPLOYEE"
-    
-    // Security: Only allow ADMIN role if this is the first user
-    if (userRole === "ADMIN" && !isFirstUser) {
-      return NextResponse.json({ error: "ADMIN role can only be assigned to the first user" }, { status: 403 })
-    }
-    
-    // First user is always ADMIN
-    if (isFirstUser) {
-      userRole = "ADMIN"
-    }
+    // Determine role (default EMPLOYEE if not provided)
+    const userRole: string = role || "EMPLOYEE"
 
     // Validate role
     const validRoles = ["ADMIN", "MANAGER", "TECHNICIAN", "EMPLOYEE"]
@@ -53,30 +39,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 })
     }
 
-    // Create company if needed (only for first user)
-    let companyId = company.id
-    if (!companyId && isFirstUser) {
-      const newCompany = await prisma.company.create({
+    // Company handling based on role
+    // Note: User model has no companyId link; we only create/validate company records per requirements.
+    const companyName = (company?.name || "").trim()
+    if (!companyName) {
+      return NextResponse.json({ error: "Company name is required" }, { status: 400 })
+    }
+
+    if (userRole === "ADMIN") {
+      // Admin: must create a NEW company. Error if a company with same name already exists.
+      const existingCompany = await prisma.company.findFirst({ where: { name: companyName } })
+      if (existingCompany) {
+        return NextResponse.json({ error: "Company already exists" }, { status: 409 })
+      }
+      await prisma.company.create({
         data: {
-          name: company.name,
+          name: companyName,
           location: company.location || "",
         },
       })
-      companyId = newCompany.id
-    } else if (!companyId) {
-      // For subsequent users, use the first company (or implement company selection)
-      const firstCompany = await prisma.company.findFirst()
-      if (firstCompany) {
-        companyId = firstCompany.id
-      } else {
-        // Fallback: create company
-        const newCompany = await prisma.company.create({
-          data: {
-            name: company.name || "Default Company",
-            location: company.location || "",
-          },
-        })
-        companyId = newCompany.id
+    } else {
+      // Non-admin: must register to an EXISTING company by name
+      const targetCompany = await prisma.company.findFirst({ where: { name: companyName } })
+      if (!targetCompany) {
+        return NextResponse.json({ error: "Company doesn't exist" }, { status: 404 })
       }
     }
 
@@ -91,7 +77,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create session (simplified - in production use proper session management)
-    const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } }, { status: 201 })
+    const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role } }, { status: 201 })
 
     response.cookies.set("userId", user.id, {
       httpOnly: true,

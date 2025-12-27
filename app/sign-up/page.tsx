@@ -18,26 +18,6 @@ export default function SignUpPage() {
     companyName: "",
     role: "EMPLOYEE", // Default role
   })
-  const [isFirstUser, setIsFirstUser] = useState(false)
-
-  // Check if this is the first user (to allow ADMIN role)
-  useEffect(() => {
-    const checkFirstUser = async () => {
-      try {
-        const response = await fetch("/api/auth/check-first-user")
-        if (response.ok) {
-          const data = await response.json()
-          setIsFirstUser(data.isFirstUser)
-          if (data.isFirstUser) {
-            setFormData(prev => ({ ...prev, role: "ADMIN" }))
-          }
-        }
-      } catch (error) {
-        console.error("Error checking first user:", error)
-      }
-    }
-    checkFirstUser()
-  })
   const [error, setError] = useState("")
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -117,26 +97,14 @@ export default function SignUpPage() {
               onChange={handleChange}
               className="w-full px-4 py-2 bg-slate-700 text-white border border-slate-600 rounded-lg focus:outline-none focus:border-blue-500 transition"
             >
-              {isFirstUser ? (
-                <option value="ADMIN">Admin (First User)</option>
-              ) : (
-                <>
-                  <option value="EMPLOYEE">Employee</option>
-                  <option value="TECHNICIAN">Technician</option>
-                  <option value="MANAGER">Manager</option>
-                </>
-              )}
+              <option value="ADMIN">Admin</option>
+              <option value="EMPLOYEE">Employee</option>
+              <option value="TECHNICIAN">Technician</option>
+              <option value="MANAGER">Manager</option>
             </select>
-            {isFirstUser && (
-              <p className="text-xs text-blue-400 mt-1">
-                ⭐ You're the first user! You'll be the Admin.
-              </p>
-            )}
-            {!isFirstUser && (
-              <p className="text-xs text-slate-400 mt-1">
-                Admin role is only available to the first user. Contact your administrator to change roles.
-              </p>
-            )}
+            <p className="text-xs text-slate-400 mt-1">
+              Selecting Admin will create a new company with the provided name. Other roles require an existing company name.
+            </p>
           </div>
 
           <div>

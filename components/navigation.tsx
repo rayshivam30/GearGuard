@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth-context"
 export function Navigation() {
   const router = useRouter()
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, isLoading, isAuthenticated } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up"
@@ -22,6 +22,11 @@ export function Navigation() {
 
   // Hide navigation on auth pages and root page (root has its own nav)
   if (isAuthPage || isRootPage) {
+    return null
+  }
+
+  // Avoid rendering partial navigation while auth state is loading
+  if (isLoading) {
     return null
   }
 
@@ -75,13 +80,15 @@ export function Navigation() {
 
           {/* Sign Out & Mobile Menu */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition"
-            >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition"
+              >
+                <LogOut size={18} />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            )}
 
             {/* Mobile Menu Button */}
             <button
