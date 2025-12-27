@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { subject, description, equipmentId, companyId, maintenanceType, priority, assignedTeam, scheduledDate } = body
+    const { subject, description, equipmentId, companyId, maintenanceType, priority, assignedTeam, assignedTechnicianId, scheduledDate, duration, notes, instructions } = body
 
     if (!subject || !equipmentId || !companyId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -109,8 +109,8 @@ export async function POST(request: NextRequest) {
 
     // Use assignedTeam from body, or fall back to equipment's default maintenance team
     const teamId = assignedTeam || equipment.defaultMaintenanceTeamId
-    // Use assignedTechnician from equipment if available
-    const technicianId = equipment.assignedTechnicianId
+    // Use assignedTechnician from body, or fall back to equipment's assigned technician
+    const technicianId = assignedTechnicianId || equipment.assignedTechnicianId
 
     const parsedScheduledDate = scheduledDate ? parseLocalDateInput(scheduledDate) : null
 
@@ -126,6 +126,9 @@ export async function POST(request: NextRequest) {
         assignedTeam: teamId || null,
         assignedTechnicianId: technicianId || null,
         scheduledDate: parsedScheduledDate,
+        duration: duration || null,
+        notes: notes || null,
+        instructions: instructions || null,
         status: "NEW",
       },
       include: {
